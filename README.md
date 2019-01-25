@@ -29,9 +29,6 @@ choco install vscode
 mkdir \code
 mkdir \code\pc-demo
 cd /code/pc-demo
-mkdir features
-mkdir features\step_definitions
-mkdir features\support
 ```
 
 6. Check node and npm versions
@@ -55,13 +52,7 @@ Accept all defaults.
 npm install --save-dev cucumber
 ```
 
-3. Create a folder for our Cucumber features
-
-```batch
-mkdir features
-```
-
-4. Create a feature file
+3. Create a feature file
 
 ```
 code features/search.feature
@@ -82,13 +73,13 @@ Feature: Keyword search
         Then I should see search results
 ```
 
-5. See a list of undefined steps
+4. See which steps have not been implemented yet (all of them!)
 
 ```
 npx cucumber-js
 ```
 
-The ouput should be similar to this
+The output should be similar to this
 ```cucumber
 C:\code\pc-demo>npx cucumber-js
 UUUUU
@@ -144,12 +135,14 @@ Warnings:
 C:\code\pc-demo>
 ```
 
-6. Create the step definitions JavaScript shell
+5. Create the step definitions JavaScript shell
 
 ```batch
-npx cucumber-js > features/step_definitions/search_steps.js
 code features/step_definitions/search_steps.js
+npx cucumber-js | code -
 ```
+
+Now copy the piped text to search_steps.js.
 
 Add this line at the start
 ```javascript
@@ -188,7 +181,7 @@ Then('I should see search results', function () {
 
 ```
 
-7. Run Cucumber again
+6. Run Cucumber again
 
 ```
 npx cucumber-js
@@ -307,9 +300,6 @@ Create a folder for this example project
 mkdir ~/code
 mkdir ~/code/pc-demo
 cd ~/code/pc-demo
-mkdir features
-mkdir features/step_definitions
-mkdir features/support
 ```
 
 Check node and npm versions

@@ -80,7 +80,7 @@ npx cucumber-js
 ```
 
 The output should be similar to this
-```cucumber
+```javascript
 C:\code\pc-demo>npx cucumber-js
 UUUUU
 
@@ -286,37 +286,37 @@ AfterAll(async () => {
 
 ## Ubuntu Install
 
-```
+```bash
 sudo apt install curl
 ```
 
-```
+```bash
 curl -sL https://deb.nodesource.com/setup_11.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
 Create a folder for this example project
-```batch
+```bash
 mkdir ~/code
 mkdir ~/code/pc-demo
 cd ~/code/pc-demo
 ```
 
 Check node and npm versions
-```batch
+```bash
 node -v
 npm -v
 ```
 
 ### Visual Studio Code
 
-```
+```bash
 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > ~/microsoft.gpg
 sudo install -o root -g root -m 644 ~/microsoft.gpg /etc/apt/trusted.gpg.d/
 sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
 ```
 
-```
+```bash
 sudo apt-get install apt-transport-https
 sudo apt-get update
 sudo apt-get install code

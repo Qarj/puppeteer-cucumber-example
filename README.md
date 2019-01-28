@@ -257,7 +257,7 @@ module.exports = {};
 4. Create a `hooks.js` file
 
 ```
-code features/support/hooks.js
+code features/hooks.js
 ```
 
 Copy-paste and save

@@ -209,7 +209,8 @@ Warnings:
 C:\code\pc-demo>
 ```
 
-## Implement the Cucumber test with Puppeteer
+
+## Begin implemenation - reference Puppeteer and implement Before and After
 
 1. Install Puppeteer to the project
 
@@ -282,6 +283,76 @@ AfterAll(async () => {
   // After all scenarios
   if (scope.browser) await scope.browser.close();
 });
+```
+
+5. Run Cucumber to see that Before and After is now implemented
+
+```
+npx cucumber-js
+```
+
+Example output
+```
+C:\code\pc-demo>npx cucumber-js
+.P----.
+
+Warnings:
+
+1) Scenario: Successfully perform a keyword search # features\search.feature:6
+   √ Before # features\hooks.js:4
+   ? Given I am an anonymous jobseeker # features\step_definitions\search_steps.js:3
+       Pending
+   - When I navigate to the totaljobs home page # features\step_definitions\search_steps.js:8
+   - And I fill in the keyword field with "Automation Test Engineer" # features\step_definitions\search_steps.js:13
+   - When I click on "Search" # features\step_definitions\search_steps.js:18
+   - Then I should see search results # features\step_definitions\search_steps.js:23
+   √ After # features\hooks.js:8
+
+1 scenario (1 pending)
+5 steps (1 pending, 4 skipped)
+0m00.005s
+
+C:\code\pc-demo>
+```
+
+
+## Implement the first two steps
+
+The first step does not do anything in this example. If we have no cookies,
+then we are an anonymous jobseeker.
+
+The After method removes all cookies after a scenario, so we don't have to worry
+about scenario state 'bleed over'.
+
+The second step navigates to the homepage.
+
+Create the `common.js` file that holds the 'menu' of implemented actions 
+```
+code features/step_definitions
+```
+
+Copy-paste save
+```
+// features/step_defintions/common.js
+
+const {
+    anonymousJobseeker,
+    visitTotaljobsHomepage,
+    wait
+} = require('../support/actions');
+
+Given('I am an anonymous jobseeker', anonymousJobseeker);
+
+When('I navigate to the totaljobs home page', visitTotaljobsHomepage);
+```
+
+Create the `actions.js` file that contains the implemented actions 
+```
+code features/support
+```
+
+Copy-paste save
+```
 ```
 
 ## Ubuntu Install

@@ -837,6 +837,171 @@ C:\code\pc-demo>
 You can find some screen shots in the `pc-demo` folder also.
 
 
+## Config management
+
+```
+set TEST_ENV=production
+```
+```
+set TEST_ENV=development
+```
+
+```
+// features/world.js
+
+const { setWorldConstructor } = require('cucumber');
+const puppeteer = require('puppeteer');
+const scope = require('./support/scope');
+
+const development_env = require('../development');
+const production_env = require('../production');
+
+let env = production_env;
+if (process.env.TEST_ENV === 'development') {
+    env = development_env;
+}
+
+const World = function() {
+  scope.driver = puppeteer;
+  scope.context = {};
+  scope.env = env;
+};
+
+setWorldConstructor(World);
+```
+
+```
+// production.js
+
+const env = {
+    hosts: {
+        totaljobs: 'https://www.totaljobs.com',
+        cwjobs: 'https://www.cwjobs.co.uk',
+    }
+} 
+
+module.exports = env;
+```
+
+```
+// development.js
+
+const env = {
+    hosts: {
+        totaljobs: 'https://test.totaljobs.com',
+        cwjobs: 'https://test.cwjobs.co.uk',
+    }
+} 
+
+module.exports = env;
+```
+
+```
+// features/support/pages.js
+
+const pages = {
+    home: '/',
+    searchResults: '/jobs/',
+    register: '/account/register/',
+}
+
+module.exports = pages;
+```
+
+```
+// features/support/actions.js
+
+const expect = require('expect-puppeteer');
+const assert = require('assert');
+
+const pages = require('./pages');
+//const selectors = require('./selectors');
+const scope = require('./scope');
+
+let headless = false;
+let slowMo = 5;
+
+const anonymousJobseeker = async () => {
+    // You are an anonymous Jobseeker by default when there are no cookies
+    return;
+};
+
+const visitTotaljobsHomepage = async () => {
+	if (!scope.browser)
+		scope.browser = await scope.driver.launch({ headless, slowMo });
+	scope.context.currentPage = await scope.browser.newPage();
+	scope.context.currentPage.setViewport({ width: 1280, height: 1024 });
+	const url = scope.env.hosts.totaljobs + pages.home;
+    const visit = await scope.context.currentPage.goto(url, {
+		waitUntil: 'networkidle2'
+	});
+	return visit;
+};
+
+const fillInKeyword = async (keyword) => {
+    await expect(scope.context.currentPage).toFillForm('form[action="/onsitesearch"]', {
+        Keywords: keyword
+    });
+};
+
+const clickSearch = async () => {
+    await scope.context.currentPage.screenshot({path: 'search-form-before-submit.png'});
+    await expect(scope.context.currentPage).toClick('input[type="submit"]');
+};
+
+const assertSearchResults = async () => {
+    await scope.context.currentPage.waitForNavigation({ waitUntil: 'domcontentloaded' });
+    await expect(scope.context.currentPage).toMatch('Explore results');
+    await scope.context.currentPage.screenshot({path: 'search-results.png'});
+};
+
+const fillInLocation = async(location) => {
+    await expect(scope.context.currentPage).toFillForm('form[action="/onsitesearch"]', {
+        LTxt: location
+    });
+};
+
+const selectRadius = async(radius) => {
+    await scope.context.currentPage.select('select[name="Radius"]', radius);
+};
+
+const clickShowMoreOptions = async () => {
+    await expect(scope.context.currentPage).toClick('button[id="more-options-toggle"]');
+    await scope.context.currentPage.waitForSelector('label[id="salaryButtonHourly"]', {visible: true,});
+};
+
+const selectSalary = async(rate_type, rate_value) => {
+    await expect(scope.context.currentPage).toClick('label[id="salaryButton' + rate_type + '"]');
+    await scope.context.currentPage.select('select[id="salaryRate"]', rate_value);
+};
+
+const selectJobType = async(job_type) => {
+    let job_type_value = '10'; // Permanent
+    if (job_type === 'Contract') { job_type_value = '20'; }
+    if (job_type === 'Temporary') { job_type_value = '2'; }
+    if (job_type === 'Part Time') { job_type_value = '40'; }
+    await scope.context.currentPage.select('select[id="JobType"]', job_type_value);
+};
+
+const selectRecruiterType = async(recruiter_type) => {
+    await expect(scope.context.currentPage).toClick('label[id="recruiterTypeButton' + recruiter_type + '"]');
+};
+
+module.exports = {
+    anonymousJobseeker,
+    visitTotaljobsHomepage,
+    fillInKeyword,
+    clickSearch,
+    assertSearchResults,
+    fillInLocation,
+    selectRadius,
+    clickShowMoreOptions,
+    selectSalary,
+    selectJobType,
+    selectRecruiterType
+}
+```
+
 
 
 ## Ubuntu Install

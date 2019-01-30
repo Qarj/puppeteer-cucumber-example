@@ -454,7 +454,7 @@ C:\code\pc-demo>
 ## Implement the remaining three steps
 
 Update `common.js` menu of supported steps to include the remaining three steps
-```
+```javascript
 // features/step_defintions/common.js
 
 const { Given, When, Then } = require('cucumber');
@@ -560,6 +560,274 @@ C:\code\pc-demo>npx cucumber-js
 
 C:\code\pc-demo>
 ```
+
+## Add an another feature - advanced search
+
+```
+code features/advanced_search.feature
+```
+
+```cucumber
+Feature: Advanced search
+    In order to find employment
+    As a jobseeker
+    I want to be able to perform an advanced search
+
+    Scenario: Successfully perform an advanced search
+        Given I am an anonymous jobseeker
+        When I navigate to the totaljobs home page
+        And I fill in the keyword field with "Automation Test Engineer"
+        And I fill in the location field with "London"
+        And I select a radius of "10" miles
+        And I click on Show more options
+        And I select an "Hourly" rate of "50" pounds
+        And I select a "Contract" job type
+        And I select a recruiter type of "Agency"
+        When I click on Search
+        Then I should see search results
+```
+
+Now run that specific feature
+```
+npx cucumber-js features/advanced_search.feature
+```
+
+You'll see that the feature will start to run since Cucumber knows how to perform some of
+the steps - they are common to the first feature. However some of the steps are not defined.
+So you'll see output like this
+```cucumber
+C:\code\pc-demo>npx cucumber-js features/advanced_search.feature
+....UUUUUU--.
+
+Warnings:
+
+1) Scenario: Successfully perform an advanced search # features\advanced_search.feature:6
+   √ Before # features\hooks.js:4
+   √ Given I am an anonymous jobseeker # features\step_definitions\common.js:16
+   √ When I navigate to the totaljobs home page # features\step_definitions\common.js:18
+   √ And I fill in the keyword field with "Automation Test Engineer" # features\step_definitions\common.js:20
+   ? And I fill in the location field with "London"
+       Undefined. Implement with the following snippet:
+
+         When('I fill in the location field with {string}', function (string) {
+           // Write code here that turns the phrase above into concrete actions
+           return 'pending';
+         });
+
+   ? And I select a radius of "10" miles
+       Undefined. Implement with the following snippet:
+
+         When('I select a radius of {string} miles', function (string) {
+           // Write code here that turns the phrase above into concrete actions
+           return 'pending';
+         });
+
+   ? And I click on Show more options
+       Undefined. Implement with the following snippet:
+
+         When('I click on Show more options', function () {
+           // Write code here that turns the phrase above into concrete actions
+           return 'pending';
+         });
+
+   ? And I select an "Hourly" rate of "50" pounds
+       Undefined. Implement with the following snippet:
+
+         When('I select an {string} rate of {string} pounds', function (string, string2) {
+           // Write code here that turns the phrase above into concrete actions
+           return 'pending';
+         });
+
+   ? And I select a "Contract" job type
+       Undefined. Implement with the following snippet:
+
+         When('I select a {string} job type', function (string) {
+           // Write code here that turns the phrase above into concrete actions
+           return 'pending';
+         });
+
+   ? And I select a recruiter type of "Agency"
+       Undefined. Implement with the following snippet:
+
+         When('I select a recruiter type of {string}', function (string) {
+           // Write code here that turns the phrase above into concrete actions
+           return 'pending';
+         });
+
+   - When I click on Search # features\step_definitions\common.js:22
+   - Then I should see search results # features\step_definitions\common.js:24
+   √ After # features\hooks.js:8
+
+1 scenario (1 undefined)
+11 steps (6 undefined, 2 skipped, 3 passed)
+0m05.208s
+
+C:\code\pc-demo>
+```
+
+Add the missing steps to `common.js` by copying and pasting the undefined output,
+editing, then updating the constant list.
+```javascript
+// features/step_defintions/common.js
+
+const { Given, When, Then } = require('cucumber');
+
+var {setDefaultTimeout} = require('cucumber');
+setDefaultTimeout(60 * 1000);
+
+const {
+    anonymousJobseeker,
+    visitTotaljobsHomepage,
+    fillInKeyword,
+    clickSearch,
+    assertSearchResults,
+    fillInLocation,
+    selectRadius,
+    clickShowMoreOptions,
+    selectSalary,
+    selectJobType,
+    selectRecruiterType
+} = require('../support/actions');
+
+Given('I am an anonymous jobseeker', anonymousJobseeker);
+
+When('I navigate to the totaljobs home page', visitTotaljobsHomepage);
+
+When('I fill in the keyword field with {string}', fillInKeyword);
+
+When('I click on Search', clickSearch);
+
+Then('I should see search results', assertSearchResults);
+
+When('I fill in the location field with {string}', fillInLocation);
+
+When('I select a radius of {string} miles', selectRadius);
+
+When('I click on Show more options', clickShowMoreOptions);
+
+When('I select an {string} rate of {string} pounds', selectSalary);
+
+When('I select a {string} job type', selectJobType);
+
+When('I select a recruiter type of {string}', selectRecruiterType);
+```
+
+Now update `actions.js` with the implementation detail.
+
+```javascript
+const expect = require('expect-puppeteer');
+
+const assert = require('assert');
+
+//const pages = require('./pages');
+//const selectors = require('./selectors');
+const scope = require('./scope');
+
+let headless = false;
+let slowMo = 5;
+
+const anonymousJobseeker = async () => {
+    // You are an anonymous Jobseeker by default when there are no cookies
+    return;
+};
+
+const visitTotaljobsHomepage = async () => {
+	if (!scope.browser)
+		scope.browser = await scope.driver.launch({ headless, slowMo });
+	scope.context.currentPage = await scope.browser.newPage();
+	scope.context.currentPage.setViewport({ width: 1280, height: 1024 });
+//	const url = scope.host + pages.home;
+	const url = 'https://www.totaljobs.com';
+    const visit = await scope.context.currentPage.goto(url, {
+		waitUntil: 'networkidle2'
+	});
+	return visit;
+};
+
+const fillInKeyword = async (keyword) => {
+    await expect(scope.context.currentPage).toFillForm('form[action="/onsitesearch"]', {
+        Keywords: keyword
+    });
+};
+
+const clickSearch = async () => {
+    await scope.context.currentPage.screenshot({path: 'search-form-before-submit.png'});
+    await expect(scope.context.currentPage).toClick('input[type="submit"]');
+};
+
+const assertSearchResults = async () => {
+    await scope.context.currentPage.waitForNavigation({ waitUntil: 'domcontentloaded' });
+    await expect(scope.context.currentPage).toMatch('Explore results');
+    await scope.context.currentPage.screenshot({path: 'search-results.png'});
+};
+
+const fillInLocation = async(location) => {
+    await expect(scope.context.currentPage).toFillForm('form[action="/onsitesearch"]', {
+        LTxt: location
+    });
+};
+
+const selectRadius = async(radius) => {
+    await scope.context.currentPage.select('select[name="Radius"]', radius);
+};
+
+const clickShowMoreOptions = async () => {
+    await expect(scope.context.currentPage).toClick('button[id="more-options-toggle"]');
+    await scope.context.currentPage.waitForSelector('label[id="salaryButtonHourly"]', {visible: true,});
+};
+
+const selectSalary = async(rate_type, rate_value) => {
+    await expect(scope.context.currentPage).toClick('label[id="salaryButton' + rate_type + '"]');
+    await scope.context.currentPage.select('select[id="salaryRate"]', rate_value);
+};
+
+const selectJobType = async(job_type) => {
+    let job_type_value = '10'; // Permanent
+    if (job_type === 'Contract') { job_type_value = '20'; }
+    if (job_type === 'Temporary') { job_type_value = '2'; }
+    if (job_type === 'Part Time') { job_type_value = '40'; }
+    await scope.context.currentPage.select('select[id="JobType"]', job_type_value);
+};
+
+const selectRecruiterType = async(recruiter_type) => {
+    await expect(scope.context.currentPage).toClick('label[id="recruiterTypeButton' + recruiter_type + '"]');
+};
+
+module.exports = {
+    anonymousJobseeker,
+    visitTotaljobsHomepage,
+    fillInKeyword,
+    clickSearch,
+    assertSearchResults,
+    fillInLocation,
+    selectRadius,
+    clickShowMoreOptions,
+    selectSalary,
+    selectJobType,
+    selectRecruiterType
+}
+```
+
+Run the `advanced_search.feature`
+```
+npx cucumber-js features/advanced_search.feature
+```
+
+All the steps should complete ok
+```
+C:\code\pc-demo>npx cucumber-js features/advanced_search.feature
+.............
+
+1 scenario (1 passed)
+11 steps (11 passed)
+0m09.573s
+
+C:\code\pc-demo>
+```
+
+You can find some screenshots in the `pc-demo` folder also.
+
+
 
 
 ## Ubuntu Install

@@ -69,7 +69,7 @@ Feature: Keyword search
         Given I am an anonymous jobseeker
         When I navigate to the totaljobs home page
         And I fill in the keyword field with "Automation Test Engineer"
-        When I click on "Search"
+        When I click on Search
         Then I should see search results
 ```
 
@@ -111,10 +111,10 @@ Warnings:
            return 'pending';
          });
 
-   ? When I click on "Search"
+   ? When I click on Search
        Undefined. Implement with the following snippet:
 
-         When('I click on {string}', function (string) {
+         When('I click on Search', function () {
            // Write code here that turns the phrase above into concrete actions
            return 'pending';
          });
@@ -169,7 +169,7 @@ When('I fill in the keyword field with {string}', function (string) {
     return 'pending';
 });
 
-When('I click on {string}', function (string) {
+When('I click on Search', function () {
     // Write code here that turns the phrase above into concrete actions
     return 'pending';
 });
@@ -199,7 +199,7 @@ Warnings:
        Pending
    - When I navigate to the totaljobs home page # features\step_definitions\search_steps.js:8
    - And I fill in the keyword field with "Automation Test Engineer" # features\step_definitions\search_steps.js:13
-   - When I click on "Search" # features\step_definitions\search_steps.js:18
+   - When I click on Search # features\step_definitions\search_steps.js:18
    - Then I should see search results # features\step_definitions\search_steps.js:23
 
 1 scenario (1 pending)
@@ -215,7 +215,7 @@ C:\code\pc-demo>
 1. Install Puppeteer to the project
 
 ```
-npm --save-dev install puppeteer
+npm --save-dev install puppeteer expect-puppeteer
 ```
 
 2. Create a `world.js` file
@@ -232,6 +232,7 @@ const scope = require('./support/scope');
 
 const World = function() {
   scope.driver = puppeteer;
+  scope.context = {};
 };
 
 setWorldConstructor(World);
@@ -326,20 +327,22 @@ about scenario state 'bleed over'.
 
 The second step navigates to the homepage.
 
-Create the `common.js` file that holds the 'menu' of implemented actions 
+Create the `common.js` file that holds the 'menu' of implemented actions
 ```
-code features/step_definitions
+code features/step_definitions/common.js
 ```
 
 Copy-paste save
 ```
 // features/step_defintions/common.js
 
+const { Given, When, Then } = require('cucumber');
+
 const {
     anonymousJobseeker,
-    visitTotaljobsHomepage,
-    wait
+    visitTotaljobsHomepage
 } = require('../support/actions');
+
 
 Given('I am an anonymous jobseeker', anonymousJobseeker);
 
@@ -348,12 +351,207 @@ When('I navigate to the totaljobs home page', visitTotaljobsHomepage);
 
 Create the `actions.js` file that contains the implemented actions 
 ```
-code features/support
+code features/support/actions.js
 ```
 
 Copy-paste save
 ```
+const assert = require('assert');
+
+const scope = require('./scope');
+
+let headless = false;
+let slowMo = 5;
+
+const anonymousJobseeker = async () => {
+    // You are an anonymous Jobseeker by default when there are no cookies
+    return;
+};
+
+const visitTotaljobsHomepage = async () => {
+	if (!scope.browser)
+		scope.browser = await scope.driver.launch({ headless, slowMo });
+	scope.context.currentPage = await scope.browser.newPage();
+	scope.context.currentPage.setViewport({ width: 1280, height: 1024 });
+	const url = 'https://www.totaljobs.com';
+    const visit = await scope.context.currentPage.goto(url, {
+		waitUntil: 'networkidle2'
+	});
+	return visit;
+};
+
+const pending = callback => {
+	callback(null, 'pending');
+};
+
+module.exports = {
+    anonymousJobseeker,
+    visitTotaljobsHomepage
+}
 ```
+
+We are not quite ready to run just yet. We now have duplicate definitions for
+- 'I am an anonymous jobseeker'
+- 'I navigate to the totaljobs home page'
+
+These need to be removed from `search_steps.js`. It becomes
+```
+// features/step_definitions/search_steps.js
+
+const { Given, When, Then } = require('cucumber');
+
+When('I fill in the keyword field with {string}', function (string) {
+    // Write code here that turns the phrase above into concrete actions
+    return 'pending';
+});
+
+When('I click on Search', function () {
+    // Write code here that turns the phrase above into concrete actions
+    return 'pending';
+});
+
+Then('I should see search results', function () {
+    // Write code here that turns the phrase above into concrete actions
+    return 'pending';
+});
+```
+
+Now when we run we see browser pop up and navigate to the home page.
+```
+npx cucumber-js
+```
+
+Example output
+```
+C:\code\pc-demo>npx cucumber-js
+...P--.
+
+Warnings:
+
+1) Scenario: Successfully perform a keyword search # features\search.feature:6
+   √ Before # features\hooks.js:4
+   √ Given I am an anonymous jobseeker # features\step_definitions\common.js:11
+   √ When I navigate to the totaljobs home page # features\step_definitions\common.js:13
+   ? And I fill in the keyword field with "Automation Test Engineer" # features\step_definitions\search_steps.js:3
+       Pending
+   - When I click on Search # features\step_definitions\search_steps.js:8
+   - Then I should see search results # features\step_definitions\search_steps.js:13
+   √ After # features\hooks.js:8
+
+1 scenario (1 pending)
+5 steps (1 pending, 2 skipped, 2 passed)
+0m04.537s
+
+C:\code\pc-demo>
+```
+
+## Implement the remaining three steps
+
+Update `common.js` menu of supported steps to include the remaining three steps
+```
+// features/step_defintions/common.js
+
+const { Given, When, Then } = require('cucumber');
+
+const {
+    anonymousJobseeker,
+    visitTotaljobsHomepage,
+    fillInKeyword,
+    clickSearch,
+    assertSearchResults
+} = require('../support/actions');
+
+Given('I am an anonymous jobseeker', anonymousJobseeker);
+
+When('I navigate to the totaljobs home page', visitTotaljobsHomepage);
+
+When('I fill in the keyword field with {string}', fillInKeyword);
+
+When('I click on Search', clickSearch);
+
+Then('I should see search results', assertSearchResults);
+```
+
+At this point we should delete `search_steps.js` since all steps are now in `common.js`
+
+Windows
+```
+del features\step_definitions\search_steps.js
+```
+
+Update `actions.js` with the implementations
+
+```
+const expect = require('expect-puppeteer');
+
+const assert = require('assert');
+
+//const pages = require('./pages');
+//const selectors = require('./selectors');
+const scope = require('./scope');
+
+let headless = false;
+let slowMo = 5;
+
+const anonymousJobseeker = async () => {
+    // You are an anonymous Jobseeker by default when there are no cookies
+    return;
+};
+
+const visitTotaljobsHomepage = async () => {
+	if (!scope.browser)
+		scope.browser = await scope.driver.launch({ headless, slowMo });
+	scope.context.currentPage = await scope.browser.newPage();
+	scope.context.currentPage.setViewport({ width: 1280, height: 1024 });
+//	const url = scope.host + pages.home;
+	const url = 'https://www.totaljobs.com';
+    const visit = await scope.context.currentPage.goto(url, {
+		waitUntil: 'networkidle2'
+	});
+	return visit;
+};
+
+const fillInKeyword = async (keyword) => {
+    await expect(scope.context.currentPage).toFillForm('form[action="/onsitesearch"]', {
+        Keywords: keyword
+    });
+};
+
+const clickSearch = async () => {
+    await expect(scope.context.currentPage).toClick('input[type="submit"]');
+};
+
+const assertSearchResults = async () => {
+    await scope.context.currentPage.waitForNavigation({ waitUntil: 'domcontentloaded' });
+    await expect(scope.context.currentPage).toMatch('Explore results');
+};
+
+module.exports = {
+    anonymousJobseeker,
+    visitTotaljobsHomepage,
+    fillInKeyword,
+    clickSearch,
+    assertSearchResults
+}
+```
+
+Now the full scenario should run
+```
+npx cucumber-js
+```
+
+Example output
+```
+C:\code\pc-demo>npx cucumber-js
+.......
+
+1 scenario (1 passed)
+5 steps (5 passed)
+0m06.928s
+
+C:\code\pc-demo>
+```
+
 
 ## Ubuntu Install
 
@@ -378,6 +576,7 @@ Check node and npm versions
 node -v
 npm -v
 ```
+
 
 ### Visual Studio Code
 

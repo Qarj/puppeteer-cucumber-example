@@ -12,9 +12,12 @@ These instructions will work on a brand new OS install.
 @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
 ```
 
-2. Install node.js
+2. Install or upgrade node.js
 ```batch
 choco install nodejs
+```
+```batch
+choco upgrade nodejs
 ```
 
 3. Install Visual Studio Code
@@ -350,10 +353,10 @@ const {
     visitTotaljobsHomepage
 } = require('../support/actions');
 
-
 Given('I am an anonymous jobseeker', anonymousJobseeker);
 
-When('I navigate to the totaljobs home page', visitTotaljobsHomepage);```
+When('I navigate to the totaljobs home page', visitTotaljobsHomepage);
+```
 
 Create the `actions.js` file that contains the implemented actions 
 ```
@@ -401,7 +404,7 @@ We are not quite ready to run just yet. We now have duplicate definitions for
 - 'I navigate to the totaljobs home page'
 
 These need to be removed from `search_steps.js`. It becomes
-```
+```javascript
 // features/step_definitions/search_steps.js
 
 const { Given, When, Then } = require('cucumber');
@@ -428,7 +431,7 @@ npx cucumber-js
 ```
 
 Example output
-```
+```cucumber
 C:\code\pc-demo>npx cucumber-js
 ...P--.
 
@@ -483,9 +486,13 @@ Then('I should see search results', assertSearchResults);
 
 At this point we should delete `search_steps.js` since all steps are now in `common.js`
 
-Windows
+_Windows_
 ```
 del features\step_definitions\search_steps.js
+```
+_Linux_
+```
+rm features/step_definitions/search_steps.js
 ```
 
 Update `actions.js` with the implementations

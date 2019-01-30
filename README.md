@@ -300,7 +300,7 @@ npx cucumber-js
 ```
 
 Example output
-```
+```cucumber
 C:\code\pc-demo>npx cucumber-js
 .P----.
 
@@ -498,8 +498,9 @@ rm features/step_definitions/search_steps.js
 Update `actions.js` with the implementations
 
 ```javascript
-const expect = require('expect-puppeteer');
+// features/support/actions.js
 
+const expect = require('expect-puppeteer');
 const assert = require('assert');
 
 //const pages = require('./pages');
@@ -585,7 +586,7 @@ Feature: Advanced search
         When I navigate to the totaljobs home page
         And I fill in the keyword field with "Automation Test Engineer"
         And I fill in the location field with "London"
-        And I select a radius of "10" miles
+        And I select a radius of "0" miles
         And I click on Show more options
         And I select an "Hourly" rate of "50" pounds
         And I select a "Contract" job type
@@ -621,7 +622,7 @@ Warnings:
            return 'pending';
          });
 
-   ? And I select a radius of "10" miles
+   ? And I select a radius of "0" miles
        Undefined. Implement with the following snippet:
 
          When('I select a radius of {string} miles', function (string) {
@@ -722,8 +723,9 @@ When('I select a recruiter type of {string}', selectRecruiterType);
 Now update `actions.js` with the implementation detail.
 
 ```javascript
-const expect = require('expect-puppeteer');
+// features/support/actions.js
 
+const expect = require('expect-puppeteer');
 const assert = require('assert');
 
 //const pages = require('./pages');
@@ -820,7 +822,7 @@ Run the `advanced_search.feature`
 npx cucumber-js features/advanced_search.feature
 ```
 
-All the steps should complete ok
+All the steps should complete OK
 ```
 C:\code\pc-demo>npx cucumber-js features/advanced_search.feature
 .............
@@ -832,7 +834,7 @@ C:\code\pc-demo>npx cucumber-js features/advanced_search.feature
 C:\code\pc-demo>
 ```
 
-You can find some screenshots in the `pc-demo` folder also.
+You can find some screen shots in the `pc-demo` folder also.
 
 
 

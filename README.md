@@ -142,7 +142,7 @@ code features/step_definitions/search_steps.js
 npx cucumber-js | code -
 ```
 
-Now copy the piped text to search_steps.js.
+Now copy the piped text to `search_steps.js`.
 
 Add this line at the start
 ```javascript
@@ -154,6 +154,10 @@ Fix the indenting of the code.
 
 You will end up with something like
 ```javascript
+// features/step_definitions/search_steps.js
+
+const { Given, When, Then } = require('cucumber');
+
 Given('I am an anonymous jobseeker', function () {
     // Write code here that turns the phrase above into concrete actions
     return 'pending';
@@ -333,10 +337,13 @@ code features/step_definitions/common.js
 ```
 
 Copy-paste save
-```
+```javascript
 // features/step_defintions/common.js
 
 const { Given, When, Then } = require('cucumber');
+
+var {setDefaultTimeout} = require('cucumber');
+setDefaultTimeout(60 * 1000);
 
 const {
     anonymousJobseeker,
@@ -346,8 +353,7 @@ const {
 
 Given('I am an anonymous jobseeker', anonymousJobseeker);
 
-When('I navigate to the totaljobs home page', visitTotaljobsHomepage);
-```
+When('I navigate to the totaljobs home page', visitTotaljobsHomepage);```
 
 Create the `actions.js` file that contains the implemented actions 
 ```
@@ -355,7 +361,7 @@ code features/support/actions.js
 ```
 
 Copy-paste save
-```
+```javascript
 const assert = require('assert');
 
 const scope = require('./scope');
@@ -453,6 +459,9 @@ Update `common.js` menu of supported steps to include the remaining three steps
 
 const { Given, When, Then } = require('cucumber');
 
+var {setDefaultTimeout} = require('cucumber');
+setDefaultTimeout(60 * 1000);
+
 const {
     anonymousJobseeker,
     visitTotaljobsHomepage,
@@ -481,7 +490,7 @@ del features\step_definitions\search_steps.js
 
 Update `actions.js` with the implementations
 
-```
+```javascript
 const expect = require('expect-puppeteer');
 
 const assert = require('assert');

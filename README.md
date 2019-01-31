@@ -1257,6 +1257,16 @@ _Windows_
 ```
 mkdir \code
 cd /code
+```
+
+_Linux_
+```
+mkdir ~/code
+cd ~/code
+```
+
+_Common_
+```
 git clone https://github.com/Qarj/puppeteer-cucumber-example
 cd puppeteer-cucumber-example/solution
 npm install

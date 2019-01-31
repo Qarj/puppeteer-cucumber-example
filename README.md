@@ -1237,6 +1237,22 @@ npx cucumber-js
 
 ## Further notes
 
+### Solution
+You can find all the files discussed here in the `solution` folder.
+
+You can clone, build and run the solution as follows
+
+_Windows_
+```
+mkdir \code
+cd /code
+git clone https://github.com/Qarj/puppeteer-cucumber-example
+cd puppeteer-cucumber-example
+npm install
+npx cucumber-js
+```
+
+
 ### Slow Mode
 In `actions.js` slowMo is set to 5 to make the tests run more slowly
 so it is easier to see what is going on. Set it to 0 make the tests

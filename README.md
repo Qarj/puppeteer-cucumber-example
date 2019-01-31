@@ -6,10 +6,11 @@ This example was adapted from Anephenix's article at medium:
 https://medium.com/@anephenix/end-to-end-testing-single-page-apps-and-node-js-apis-with-cucumber-js-and-puppeteer-ad5a519ace0
 
 
-## Windows Install
+## Windows base setup
 
 These instructions will work on a brand new OS install.
 
+Instructions for Ubuntu can be found at the bottom of this README.
 
 1. Open up an administrator command prompt and install Chocolatey
 ```batch
@@ -54,7 +55,10 @@ C:\code\pc-demo>npm -v
 ```
 
 
-## After install, create a Cucumber test
+## Create a Cucumber project
+
+At this point you have Node and Visual Studio code installed. You have created
+a directory for this project, and it is the current directory - i.e. `pc-demo`.
 
 1. Create a package.json file
 
@@ -860,7 +864,7 @@ code production.js
 ```
 
 Copy-paste save
-```
+```javascript
 // production.js
 
 const env = {
@@ -878,7 +882,7 @@ code development.js
 ```
 
 Copy-paste save
-```
+```javascript
 // development.js
 
 const env = {
@@ -895,7 +899,7 @@ Update `world.js` to default to pointing to production.
 If the `TEST_ENV` environment variable is set, we'll use that instead.
 
 At the same time we will create a folder for screen shots and other test output.
-```
+```javascript
 // features/world.js
 
 const { setWorldConstructor } = require('cucumber');
@@ -928,7 +932,7 @@ code features/support/pages.js
 ```
 
 Copy-paste save
-```
+```javascript
 // features/support/pages.js
 
 const pages = {
@@ -947,7 +951,7 @@ code features/support/selectors.js
 ```
 
 Copy-paste save
-```
+```javascript
 // features/support/selectors.js
 
 const click = {
@@ -968,7 +972,7 @@ module.exports = {
 Update `actions.js` to use the abstractions (pages, selectors and environment).
 
 Note that now we have a generic `clickOnItem` instead of hard coded clicks.
-```
+```javascript
 // features/support/actions.js
 
 const expect = require('expect-puppeteer');
@@ -1059,7 +1063,7 @@ module.exports = {
 ```
 
 Update `advanced_search.feature` to use the abstractions
-```
+```cucumber
 Feature: Advanced search
     In order to find employment
     As a jobseeker
@@ -1080,7 +1084,7 @@ Feature: Advanced search
 ```
 
 `common.js` should be updated also - we now have the generic `clickOnItem` and `visitHomepage` functions.
-```
+```javascript
 // features/step_definitions/common.js
 
 const { Given, When, Then } = require('cucumber');
@@ -1126,7 +1130,7 @@ Finally, we update `hooks.js` to write out a screenshot and the DOM on failure.
 
 Note that in the `Before` hook we make scenario name, and a filename safe version
 of the name available to the shared context.
-```
+```javascript
 // features/hooks.js
 
 const { After, Before, AfterAll } = require('cucumber');
@@ -1192,13 +1196,13 @@ set TEST_ENV=production
 ```
 
 
-## Cucumber and abstraction 
+## Add a scenario - without any further coding!
 
 Now we can add a different scenario for another brand in the feature file -
 and it will work without any further code changes.
 
 Copy-paste this to the end of `advanced_search.feature`
-```
+```cucumber
 
     Scenario: Successfully perform an advanced search on caterer
         Given I am an anonymous jobseeker
@@ -1218,8 +1222,11 @@ Run the new scenario
 npx cucumber-js features/advanced_search.feature --name caterer
 ```
 
+
+## Wrapping up
+
 Finally update the original `search.feature` for the new abstractions also
-```
+```cucumber
 Feature: Keyword search
     In order to find employment
     As a jobseeker
@@ -1263,8 +1270,7 @@ so it is easier to see what is going on. Set it to 0 make the tests
 run faster.
 
 
-
-## Ubuntu Install
+## Ubuntu base setup
 
 ```bash
 sudo apt install curl

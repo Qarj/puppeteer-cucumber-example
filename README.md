@@ -837,15 +837,51 @@ C:\code\pc-demo>
 You can find some screen shots in the `pc-demo` folder also.
 
 
-## Config management
+## Config management and abstraction
+
+Let's say we need to run the tests against the production and development environments.
+
+So let's create some environment definitions as JavaScript so IntelliSense can see it.
+```
+code production.js
+```
+
+Copy-paste save
+```
+// production.js
+
+const env = {
+    hosts: {
+        totaljobs: 'https://www.totaljobs.com',
+        caterer: 'https://www.caterer.com',
+    }
+} 
+
+module.exports = env;
+```
 
 ```
-set TEST_ENV=production
-```
-```
-set TEST_ENV=development
+code development.js
 ```
 
+Copy-paste save
+```
+// development.js
+
+const env = {
+    hosts: {
+        totaljobs: 'https://test.totaljobs.com',
+        caterer: 'https://test.caterer.com',
+    }
+} 
+
+module.exports = env;
+```
+
+Update `world.js` to default to pointing to production.
+If the `TEST_ENV` environment variable is set, we'll use that instead.
+
+At the same time we will create a folder for screenshots and test output.
 ```
 // features/world.js
 
@@ -861,6 +897,9 @@ if (process.env.TEST_ENV === 'development') {
     env = development_env;
 }
 
+var fs = require('fs');
+if (!fs.existsSync('./screenshots')){ fs.mkdirSync('screenshots'); }
+
 const World = function() {
   scope.driver = puppeteer;
   scope.context = {};
@@ -870,32 +909,12 @@ const World = function() {
 setWorldConstructor(World);
 ```
 
+Now let's do some abstraction. We'll define some pages.
 ```
-// production.js
-
-const env = {
-    hosts: {
-        totaljobs: 'https://www.totaljobs.com',
-        cwjobs: 'https://www.cwjobs.co.uk',
-    }
-} 
-
-module.exports = env;
+code features/support/pages.js
 ```
 
-```
-// development.js
-
-const env = {
-    hosts: {
-        totaljobs: 'https://test.totaljobs.com',
-        cwjobs: 'https://test.cwjobs.co.uk',
-    }
-} 
-
-module.exports = env;
-```
-
+Copy-paste save
 ```
 // features/support/pages.js
 
@@ -908,14 +927,41 @@ const pages = {
 module.exports = pages;
 ```
 
+Let's define some selectors also. Also for some selectors when clicked,
+we want to specify what to wait for before continuing.
+```
+code features/support/selectors.js
+```
+
+Copy-paste save
+```
+// features/support/selectors.js
+
+const click = {
+    'Show more options': 'button[id="more-options-toggle"',
+    Search: 'input[type="submit"]',
+};
+
+const wait_visible = {
+    'Show more options': 'label[id="salaryButtonHourly"]',
+};
+
+module.exports = { 
+    click,
+    wait_visible,
+};
+```
+
+Update `actions.js` to use the abstractions (pages, selectors and environment).
+
+Note that now we have a generic `clickOnItem` instead of hard coded clicks.
 ```
 // features/support/actions.js
 
 const expect = require('expect-puppeteer');
-const assert = require('assert');
 
 const pages = require('./pages');
-//const selectors = require('./selectors');
+const selectors = require('./selectors');
 const scope = require('./scope');
 
 let headless = false;
@@ -926,12 +972,12 @@ const anonymousJobseeker = async () => {
     return;
 };
 
-const visitTotaljobsHomepage = async () => {
+const visitHomepage = async (brand) => {
 	if (!scope.browser)
-		scope.browser = await scope.driver.launch({ headless, slowMo });
+		scope.browser = await scope.driver.launch({ headless, slowMo, args: ['--window-size=1280,1024'] });
 	scope.context.currentPage = await scope.browser.newPage();
 	scope.context.currentPage.setViewport({ width: 1280, height: 1024 });
-	const url = scope.env.hosts.totaljobs + pages.home;
+    const url = scope.env.hosts[brand] + pages.home;
     const visit = await scope.context.currentPage.goto(url, {
 		waitUntil: 'networkidle2'
 	});
@@ -944,15 +990,10 @@ const fillInKeyword = async (keyword) => {
     });
 };
 
-const clickSearch = async () => {
-    await scope.context.currentPage.screenshot({path: 'search-form-before-submit.png'});
-    await expect(scope.context.currentPage).toClick('input[type="submit"]');
-};
-
 const assertSearchResults = async () => {
     await scope.context.currentPage.waitForNavigation({ waitUntil: 'domcontentloaded' });
     await expect(scope.context.currentPage).toMatch('Explore results');
-    await scope.context.currentPage.screenshot({path: 'search-results.png'});
+    await scope.context.currentPage.screenshot({path: 'screenshots/'+scope.context.filename+'_search-results.png'});
 };
 
 const fillInLocation = async(location) => {
@@ -965,9 +1006,12 @@ const selectRadius = async(radius) => {
     await scope.context.currentPage.select('select[name="Radius"]', radius);
 };
 
-const clickShowMoreOptions = async () => {
-    await expect(scope.context.currentPage).toClick('button[id="more-options-toggle"]');
-    await scope.context.currentPage.waitForSelector('label[id="salaryButtonHourly"]', {visible: true,});
+const clickOnItem = async(item) => {
+    await expect(scope.context.currentPage).toClick(selectors.click[item]);
+
+    if (selectors.wait_visible[item]) {
+        await scope.context.currentPage.waitForSelector(selectors.wait_visible[item], {visible: true,});
+    }
 };
 
 const selectSalary = async(rate_type, rate_value) => {
@@ -989,19 +1033,172 @@ const selectRecruiterType = async(recruiter_type) => {
 
 module.exports = {
     anonymousJobseeker,
-    visitTotaljobsHomepage,
+    visitHomepage,
     fillInKeyword,
-    clickSearch,
     assertSearchResults,
     fillInLocation,
     selectRadius,
-    clickShowMoreOptions,
+    clickOnItem,
     selectSalary,
     selectJobType,
     selectRecruiterType
 }
 ```
 
+Update `advanced_search.feature` to use the abstractions
+```
+Feature: Advanced search
+    In order to find employment
+    As a jobseeker
+    I want to be able to perform an advanced search
+
+    Scenario: Successfully perform an advanced search on totaljobs
+        Given I am an anonymous jobseeker
+        When I navigate to the "totaljobs" home page
+        And I fill in the keyword field with "Automation Test Engineer"
+        And I fill in the location field with "London"
+        And I select a radius of "0" miles
+        And I click on "Show more options"
+        And I select an "Hourly" rate of "50" pounds
+        And I select a "Contract" job type
+        And I select a recruiter type of "Agency"
+        When I click on "Search"
+        Then I should see search results
+```
+
+`common.js` should be updated also
+```
+// features/step_defintions/common.js
+
+const { Given, When, Then } = require('cucumber');
+
+var {setDefaultTimeout} = require('cucumber');
+setDefaultTimeout(60 * 1000);
+
+const {
+    anonymousJobseeker,
+    visitHomepage,
+    fillInKeyword,
+    assertSearchResults,
+    fillInLocation,
+    selectRadius,
+    clickOnItem,
+    selectSalary,
+    selectJobType,
+    selectRecruiterType
+} = require('../support/actions');
+
+Given('I am an anonymous jobseeker', anonymousJobseeker);
+
+When('I navigate to the {string} home page', visitHomepage);
+
+When('I fill in the keyword field with {string}', fillInKeyword);
+
+Then('I should see search results', assertSearchResults);
+
+When('I fill in the location field with {string}', fillInLocation);
+
+When('I select a radius of {string} miles', selectRadius);
+
+When('I click on {string}', clickOnItem);
+
+When('I select an {string} rate of {string} pounds', selectSalary);
+
+When('I select a {string} job type', selectJobType);
+
+When('I select a recruiter type of {string}', selectRecruiterType);
+```
+
+Finally, we update `hooks.js` to write out a screenshot and the DOM on failure
+```
+const { After, Before, AfterAll } = require('cucumber');
+const scope = require('./support/scope');
+var fs = require('fs');
+
+Before(async (scenario) => {
+    // Before each scenario
+    scope.context.name = scenario.pickle.name;
+    scope.context.filename = scope.context.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+});
+
+After(async (scenario) => {
+    // After each scenario
+
+    // Write out the dom and a screenshot if the scenario failed
+    if (scenario.result.status === 'failed') {
+        await scope.context.currentPage.screenshot({path: 'screenshots/failed___'+scope.context.filename+'.png'});
+        const dom = await scope.context.currentPage.content();
+        fs.writeFileSync('screenshots/failed___'+scope.context.filename+'.html', dom);
+    }
+
+    if (scope.browser && scope.context.currentPage) {
+
+        // delete cookies
+        const cookies = await scope.context.currentPage.cookies();
+        if (cookies && cookies.length > 0) {
+            await scope.context.currentPage.deleteCookie(...cookies);
+        }
+
+        // close web page
+        await scope.context.currentPage.close();
+        scope.context.currentPage = null;
+    }
+});
+
+AfterAll(async () => {
+    // After all scenarios
+    if (scope.browser) await scope.browser.close();
+});
+```
+
+Now run the `advanced_search.feature` again and check that it still works
+```
+npx cucumber-js features/advanced_search.feature
+```
+
+To point to the development environment, set an environment variable.
+
+_Windows_
+```
+set TEST_ENV=development
+```
+
+If you run the test at this point, you'll see that the test won't run since
+the development environment is not available on the internet (and the hostnames are made up also).
+
+Set the environment back to production.
+
+_Windows_
+```
+set TEST_ENV=production
+```
+
+
+## The power of Cucumber and Abstraction 
+
+Now we can add a different scenario for another brand in the feature file -
+and it will work without any further code changes.
+
+Copy-paste this to the end of `advanced_search.feature`
+```
+
+    Scenario: Successfully perform an advanced search on caterer
+        Given I am an anonymous jobseeker
+        When I navigate to the "caterer" home page
+        And I fill in the keyword field with "Head Chef"
+        And I fill in the location field with "Manchester"
+        And I select a radius of "10" miles
+        And I click on "Show more options"
+        And I select an "Daily" rate of "200" pounds
+        And I select a recruiter type of "Employer"
+        When I click on "Search"
+        Then I should see search results
+```
+
+Run the new scenario
+```
+npx cucumber-js features/advanced_search.feature --name caterer
+```
 
 
 ## Ubuntu Install

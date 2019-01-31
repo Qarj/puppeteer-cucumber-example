@@ -25,7 +25,7 @@ choco upgrade nodejs
 choco install vscode
 ```
 
-4. Close command prompt then open a fresh administrator command prompt
+4. Close command prompt then open a fresh command prompt (it does not have to be administrator)
 
 5. Create the required folders for this example project
 ```batch
@@ -38,6 +38,15 @@ cd /code/pc-demo
 ```batch
 node -v
 npm -v
+```
+
+At time of writing
+```
+C:\code\pc-demo>node -v
+v11.8.0
+
+C:\code\pc-demo>npm -v
+6.4.1
 ```
 
 
@@ -881,7 +890,7 @@ module.exports = env;
 Update `world.js` to default to pointing to production.
 If the `TEST_ENV` environment variable is set, we'll use that instead.
 
-At the same time we will create a folder for screenshots and test output.
+At the same time we will create a folder for screen shots and other test output.
 ```
 // features/world.js
 
@@ -898,7 +907,7 @@ if (process.env.TEST_ENV === 'development') {
 }
 
 var fs = require('fs');
-if (!fs.existsSync('./screenshots')){ fs.mkdirSync('screenshots'); }
+if (!fs.existsSync('./test_output')){ fs.mkdirSync('test_output'); }
 
 const World = function() {
   scope.driver = puppeteer;
@@ -993,7 +1002,7 @@ const fillInKeyword = async (keyword) => {
 const assertSearchResults = async () => {
     await scope.context.currentPage.waitForNavigation({ waitUntil: 'domcontentloaded' });
     await expect(scope.context.currentPage).toMatch('Explore results');
-    await scope.context.currentPage.screenshot({path: 'screenshots/'+scope.context.filename+'_search-results.png'});
+    await scope.context.currentPage.screenshot({path: 'test_output/'+scope.context.filename+'_search-results.png'});
 };
 
 const fillInLocation = async(location) => {
@@ -1066,9 +1075,9 @@ Feature: Advanced search
         Then I should see search results
 ```
 
-`common.js` should be updated also
+`common.js` should be updated also - we now have the generic `clickOnItem` and `visitHomepage` functions.
 ```
-// features/step_defintions/common.js
+// features/step_definitions/common.js
 
 const { Given, When, Then } = require('cucumber');
 
@@ -1109,8 +1118,13 @@ When('I select a {string} job type', selectJobType);
 When('I select a recruiter type of {string}', selectRecruiterType);
 ```
 
-Finally, we update `hooks.js` to write out a screenshot and the DOM on failure
+Finally, we update `hooks.js` to write out a screenshot and the DOM on failure.
+
+Note that in the `Before` hook we make scenario name, and a filename safe version
+of the name available to the shared context.
 ```
+// features/hooks.js
+
 const { After, Before, AfterAll } = require('cucumber');
 const scope = require('./support/scope');
 var fs = require('fs');
@@ -1126,9 +1140,9 @@ After(async (scenario) => {
 
     // Write out the dom and a screenshot if the scenario failed
     if (scenario.result.status === 'failed') {
-        await scope.context.currentPage.screenshot({path: 'screenshots/failed___'+scope.context.filename+'.png'});
+        await scope.context.currentPage.screenshot({path: 'test_output/failed___'+scope.context.filename+'.png'});
         const dom = await scope.context.currentPage.content();
-        fs.writeFileSync('screenshots/failed___'+scope.context.filename+'.html', dom);
+        fs.writeFileSync('test_output/failed___'+scope.context.filename+'.html', dom);
     }
 
     if (scope.browser && scope.context.currentPage) {
@@ -1164,7 +1178,7 @@ set TEST_ENV=development
 ```
 
 If you run the test at this point, you'll see that the test won't run since
-the development environment is not available on the internet (and the hostnames are made up also).
+the development environment is not available on the internet (and the host names are made up also).
 
 Set the environment back to production.
 
@@ -1174,7 +1188,7 @@ set TEST_ENV=production
 ```
 
 
-## The power of Cucumber and Abstraction 
+## Cucumber and abstraction 
 
 Now we can add a different scenario for another brand in the feature file -
 and it will work without any further code changes.
@@ -1199,6 +1213,35 @@ Run the new scenario
 ```
 npx cucumber-js features/advanced_search.feature --name caterer
 ```
+
+Finally update the original `search.feature` for the new abstractions also
+```
+Feature: Keyword search
+    In order to find employment
+    As a jobseeker
+    I want to be able to perform a keyword search
+
+    Scenario: Successfully perform a keyword search
+        Given I am an anonymous jobseeker
+        When I navigate to the "totaljobs" home page
+        And I fill in the keyword field with "Automation Test Engineer"
+        When I click on "Search"
+        Then I should see search results
+```
+
+Now all the scenarios can be run
+```
+npx cucumber-js
+```
+
+
+## Further notes
+
+### Slow Mode
+In `actions.js` slowMo is set to 5 to make the tests run more slowly
+so it is easier to see what is going on. Set it to 0 make the tests
+run faster.
+
 
 
 ## Ubuntu Install

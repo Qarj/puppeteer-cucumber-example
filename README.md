@@ -1,5 +1,9 @@
 # puppeteer-cucumber-example
-Building a Puppeteer Cucumber test from scratch
+Building a Puppeteer Cucumber test from scratch - step by step
+
+This example was adapted from Anephenix's article at medium:
+
+https://medium.com/@anephenix/end-to-end-testing-single-page-apps-and-node-js-apis-with-cucumber-js-and-puppeteer-ad5a519ace0
 
 
 ## Windows Install
@@ -1247,7 +1251,7 @@ _Windows_
 mkdir \code
 cd /code
 git clone https://github.com/Qarj/puppeteer-cucumber-example
-cd puppeteer-cucumber-example
+cd puppeteer-cucumber-example/solution
 npm install
 npx cucumber-js
 ```
@@ -1285,22 +1289,12 @@ npm -v
 ```
 
 
-### Visual Studio Code
-
+Install Visual Studio Code also if you don't have it already
 ```bash
 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > ~/microsoft.gpg
 sudo install -o root -g root -m 644 ~/microsoft.gpg /etc/apt/trusted.gpg.d/
 sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
-```
-
-```bash
 sudo apt-get install apt-transport-https
 sudo apt-get update
 sudo apt-get install code
 ```
-
-
-
-# References
-
-https://medium.com/@anephenix/end-to-end-testing-single-page-apps-and-node-js-apis-with-cucumber-js-and-puppeteer-ad5a519ace0

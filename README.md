@@ -1314,3 +1314,29 @@ sudo apt-get install apt-transport-https
 sudo apt-get update
 sudo apt-get install code
 ```
+
+## Fedora base setup
+
+```bash
+npm -v
+```
+You'll be asked if you want to install npm, select to do so.
+
+Check installed OK
+```bash
+node -v
+npm -v
+```
+
+Install dependencies for Chromium
+```bash
+yum install pango.x86_64 libXcomposite.x86_64 libXcursor.x86_64 libXdamage.x86_64 libXext.x86_64 libXi.x86_64 libXtst.x86_64 cups-libs.x86_64 libXScrnSaver.x86_64 libXrandr.x86_64 GConf2.x86_64 alsa-lib.x86_64 atk.x86_64 gtk3.x86_64 ipa-gothic-fonts xorg-x11-fonts-100dpi xorg-x11-fonts-75dpi xorg-x11-utils xorg-x11-fonts-cyrillic xorg-x11-fonts-Type1 xorg-x11-fonts-misc -y
+```
+
+Install Visual Studio Code
+```bash
+sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+dnf check-update
+sudo dnf install code
+```
